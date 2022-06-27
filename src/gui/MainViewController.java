@@ -1,11 +1,20 @@
 package gui;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import application.Main;
+import gui.util.Alerts;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.VBox;
 
 public class MainViewController implements Initializable {
 
@@ -30,11 +39,29 @@ public class MainViewController implements Initializable {
 	
 	@FXML
 	public void onMenuItemAboutAction() {
-		System.out.println("onMenuItemAboutAction");
+		loadView("/gui/About.fxml");
 	}
 	
 	@Override
 	public void initialize(URL url, ResourceBundle rb) {
 	}
-
+	
+	// synchronized -> para o processamento não ser interrompido durante o multi threading
+	private synchronized void loadView(String absoluteName) {
+		try {
+			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName)); // Pega o conteúdo da tela informada -> (absoluteName)
+			VBox newVBox = loader.load();
+			
+			Scene mainScene = Main.getMainScene();
+			VBox mainVBox = (VBox) ((ScrollPane) mainScene.getRoot()).getContent(); // Pega o conteúdo do VBox da tela principal
+			
+			Node mainMenu = mainVBox.getChildren().get(0); // Armazena os dados da mainVBox em um Node
+			mainVBox.getChildren().clear(); // Limpa os elementos da tela
+			mainVBox.getChildren().add(mainMenu); // Adiciona um novo VBox à tela principal
+			mainVBox.getChildren().addAll(newVBox.getChildren()); // Insere os elementos da tela informada no novo VBox
+		} catch (IOException e) {
+			Alerts.showAlert("IO Exception", "Error loading view", e.getMessage(), AlertType.ERROR);
+		}
+		
+	}
 }
